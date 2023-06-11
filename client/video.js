@@ -17,7 +17,8 @@ import db from './db';
 //     console.log(doc)
 //    }
 
-// const videosCollection = db.collection('videos')
+const streamDB = await db.collection('videos')
+await streamDB.createIndex(['count'])
 
 export async function init(user1HTMLVideoElement, user2HTMLVideoElement) {
   if(user1HTMLVideoElement && user2HTMLVideoElement) {
@@ -25,19 +26,18 @@ export async function init(user1HTMLVideoElement, user2HTMLVideoElement) {
     
     user1HTMLVideoElement.srcObject = localStream;
     console.log({sending: localStream});
-    const streamDB = await db.collection('videos')
     let recorder = new MediaRecorder(localStream)
     const stream = new WritableStream({
+      count: 0,
       async write (chunk) {
-        const doc = { id: localStream.id, chunk }
-        console.log('writing', doc, 'to db')
+        const doc = { id: localStream.id, chunk, count: this.count++ }
         await streamDB.insert(doc)
       }
     })
     recorder.addEventListener('dataavailable', async ({ data }) => {
       await data.stream().pipeTo(stream, { preventClose: true })
         .catch(err => {
-          console.error('Error while processing stream:', err)
+          console.error('Error while processing stream, happens on locked destination or source')
         })
     })
     recorder.start(20)
@@ -46,11 +46,12 @@ export async function init(user1HTMLVideoElement, user2HTMLVideoElement) {
   }
 }
 
-export  async function createOffer(user2HTMLVideoElement) {
+export async function createOffer(user2HTMLVideoElement) {
+  const latestFrame = await streamDB.find().sort('count', -1).limit(1)
   for await (let stream of db.collection('videos').find({
-    // clout: {
-    //  $gt: 9000
-    // },
+    count: {
+      $gt: latestFrame.count
+    }
   })) {
    
     console.log({receiving: stream});

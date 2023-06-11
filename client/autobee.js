@@ -51,8 +51,13 @@ export default class AutoBee {
         return this.autobase.ready()
       }
 
+      // TODO: Implement a proper batch handling?
       batch () {
         return this
+      }
+
+      flush () {
+        return
       }
   
     feed () {
@@ -70,10 +75,6 @@ export default class AutoBee {
       const auto = new AutoBee(this.autobase, this.autobaseOptns, opts)
       auto.bee = this.bee.sub(name)
       return auto
-    }
-  
-    batch () {
-      return this
     }
   
     async put (key, value /*, opts = {} */) {
