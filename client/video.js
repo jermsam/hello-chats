@@ -22,9 +22,9 @@ import db from './db';
 export async function init(user1HTMLVideoElement, user2HTMLVideoElement) {
   if(user1HTMLVideoElement && user2HTMLVideoElement) {
     let localStream = await navigator.mediaDevices.getUserMedia({video: true, audio: false})
-    console.log(localStream);
-    user1HTMLVideoElement.srcObject = localStream;
     
+    user1HTMLVideoElement.srcObject = localStream;
+    console.log({sending: localStream});
     const stream = await db.collection('videos').insert({video: localStream})
     console.log(stream);
     
@@ -38,7 +38,8 @@ export  async function createOffer(user2HTMLVideoElement) {
     //  $gt: 9000
     // },
   })) {
-    console.log(stream.video)
+   
+    console.log({receiving: stream.video});
     let remoteStream = new MediaStream()
     console.log(remoteStream);
     user2HTMLVideoElement.srcObject = remoteStream;
