@@ -66,7 +66,7 @@ export default class AutoBee {
   
     sub (name) {
       const opts = this.opts
-      opts.sub = false
+      opts.sub = true
       const auto = new AutoBee(this.autobase, this.autobaseOptns, opts)
       auto.bee = this.bee.sub(name)
       return auto
