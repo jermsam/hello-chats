@@ -18,6 +18,7 @@ import db from './db';
 //    }
 
 const streamDB = await db.collection('videos')
+const videoMime = 'video/webm'
 await streamDB.createIndex(['count'])
 
 export async function init(user1HTMLVideoElement, user2HTMLVideoElement) {
@@ -26,7 +27,7 @@ export async function init(user1HTMLVideoElement, user2HTMLVideoElement) {
     
     user1HTMLVideoElement.srcObject = localStream;
     console.log({sending: localStream});
-    let recorder = new MediaRecorder(localStream)
+    let recorder = new MediaRecorder(localStream, { mimeType: videoMime })
     const [latestFrame] = await streamDB.find().sort('count', -1).limit(1)
     const stream = new WritableStream({
       count: latestFrame?.count || 0,
@@ -56,9 +57,9 @@ export async function createOffer(user2HTMLVideoElement) {
   })) {
    
     console.log({receiving: stream});
-    let remoteStream = new MediaStream()
-    console.log(remoteStream);
-    user2HTMLVideoElement.srcObject = remoteStream;
+    let remoteStream = new Blob(stream.chunk, videoMime)
+    console.log(remoteStream)
+    user2HTMLVideoElement.srcObject = remoteStream
   }
   
 }
