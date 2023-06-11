@@ -25,7 +25,7 @@ export async function init(user1HTMLVideoElement, user2HTMLVideoElement) {
     console.log(localStream);
     user1HTMLVideoElement.srcObject = localStream;
     
-    const stream = await db.collection('videos').insert({text: 'Hi there'})
+    const stream = await db.collection('videos').insert({video: localStream})
     console.log(stream);
     
     await createOffer(user2HTMLVideoElement)
@@ -38,7 +38,7 @@ export  async function createOffer(user2HTMLVideoElement) {
     //  $gt: 9000
     // },
   })) {
-    console.log(stream)
+    console.log(stream.video)
     let remoteStream = new MediaStream()
     console.log(remoteStream);
     user2HTMLVideoElement.srcObject = remoteStream;
