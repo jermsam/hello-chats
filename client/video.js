@@ -22,6 +22,11 @@ import db from './db';
 export async function init(user1HTMLVideoElement, user2HTMLVideoElement) {
   if(user1HTMLVideoElement && user2HTMLVideoElement) {
     let localStream = await navigator.mediaDevices.getUserMedia({video: true, audio: false})
+    let recorder = new MediaRecorder(localStream)
+      recorder.addEventListener('dataavailable',({ data }) => {
+      // stream to the network?
+    })
+    recorder.start(20)
     
     user1HTMLVideoElement.srcObject = localStream;
     console.log({sending: localStream});
