@@ -47,7 +47,7 @@ export async function init(user1HTMLVideoElement, user2HTMLVideoElement) {
 }
 
 export async function createOffer(user2HTMLVideoElement) {
-  const latestFrame = await streamDB.find().sort('count', -1).limit(1)
+  const [latestFrame] = await streamDB.find().sort('count', -1).limit(1)
   for await (let stream of db.collection('videos').find({
     count: {
       $gt: latestFrame.count
