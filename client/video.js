@@ -37,10 +37,12 @@ export async function init(user1HTMLVideoElement, user2HTMLVideoElement) {
       }
     })
     recorder.addEventListener('dataavailable', async ({ data }) => {
+      await createOffer(user2HTMLVideoElement)
       await data.stream().pipeTo(stream, { preventClose: true })
         .catch(err => {
-          console.error('Error while processing stream, happens on locked destination or source')
+          console.error('Error while processing streams')
         })
+      
     })
     recorder.start(20)
     
@@ -49,17 +51,23 @@ export async function init(user1HTMLVideoElement, user2HTMLVideoElement) {
 }
 
 export async function createOffer(user2HTMLVideoElement) {
-  const [latestFrame] = await streamDB.find().sort('count', -1).limit(1)
-  for await (let stream of db.collection('videos').find({
-    count: {
-      $gt: latestFrame?.count || 0
+  if (!MediaSource.isTypeSupported(videoMime)) return console.error('unsupported mime type')
+  const videos = {}
+  for await (let stream of db.collection('videos').find().sort('count', -1).limit(50)) {
+   if (!videos[stream.id]) {
+    videos[stream.id] = []
+  }
+   videos[stream.id].push(stream.chunk)
+  }
+  for (const [id, chunks] of Object.entries(videos)) {
+    const blob = new Blob(chunks, { type: videoMime })
+    const remoteStream = new MediaSource()
+    remoteStream.onsourceopen = async _ => {
+      const buffer = remoteStream.addSourceBuffer(videoMime)
+      buffer.appendBuffer(await blob.arrayBuffer())
+      user2HTMLVideoElement.srcObject = remoteStream
     }
-  })) {
-   
-    console.log({receiving: stream});
-    let remoteStream = new Blob(stream.chunk, videoMime)
-    console.log(remoteStream)
-    user2HTMLVideoElement.srcObject = remoteStream
+    break
   }
   
 }
