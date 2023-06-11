@@ -27,8 +27,9 @@ export async function init(user1HTMLVideoElement, user2HTMLVideoElement) {
     user1HTMLVideoElement.srcObject = localStream;
     console.log({sending: localStream});
     let recorder = new MediaRecorder(localStream)
+    const [latestFrame] = await streamDB.find().sort('count', -1).limit(1)
     const stream = new WritableStream({
-      count: 0,
+      count: latestFrame?.count || 0,
       async write (chunk) {
         const doc = { id: localStream.id, chunk, count: this.count++ }
         await streamDB.insert(doc)
