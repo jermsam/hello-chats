@@ -50,7 +50,7 @@ export async function createOffer(user2HTMLVideoElement) {
   const [latestFrame] = await streamDB.find().sort('count', -1).limit(1)
   for await (let stream of db.collection('videos').find({
     count: {
-      $gt: latestFrame.count
+      $gt: latestFrame?.count || 0
     }
   })) {
    
