@@ -22,16 +22,25 @@ import db from './db';
 export async function init(user1HTMLVideoElement, user2HTMLVideoElement) {
   if(user1HTMLVideoElement && user2HTMLVideoElement) {
     let localStream = await navigator.mediaDevices.getUserMedia({video: true, audio: false})
-    let recorder = new MediaRecorder(localStream)
-      recorder.addEventListener('dataavailable',({ data }) => {
-      // stream to the network?
-    })
-    recorder.start(20)
     
     user1HTMLVideoElement.srcObject = localStream;
     console.log({sending: localStream});
-    const stream = await db.collection('videos').insert({video: localStream})
-    console.log(stream);
+    const streamDB = await db.collection('videos')
+    let recorder = new MediaRecorder(localStream)
+    const stream = new WritableStream({
+      async write (chunk) {
+        const doc = { id: localStream.id, chunk }
+        console.log('writing', doc, 'to db')
+        await streamDB.insert(doc)
+      }
+    })
+    recorder.addEventListener('dataavailable', async ({ data }) => {
+      await data.stream().pipeTo(stream, { preventClose: true })
+        .catch(err => {
+          console.error('Error while processing stream:', err)
+        })
+    })
+    recorder.start(20)
     
     await createOffer(user2HTMLVideoElement)
   }
@@ -44,7 +53,7 @@ export  async function createOffer(user2HTMLVideoElement) {
     // },
   })) {
    
-    console.log({receiving: stream.video});
+    console.log({receiving: stream});
     let remoteStream = new MediaStream()
     console.log(remoteStream);
     user2HTMLVideoElement.srcObject = remoteStream;
