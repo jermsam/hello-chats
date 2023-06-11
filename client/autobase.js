@@ -16,7 +16,7 @@ export default function ({localInput = null, localOutput = null, inputs = [], ou
       
    
     return new Autobase(autobaseOptns)
-      
+    
 }
 
 

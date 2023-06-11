@@ -71,7 +71,7 @@ const topic = await crypto.subtle.digest('SHA-256', b4a.from('voting 101', 'hex'
     inputs: [inputCore],
     localOutput: outputCore
    })
-  
+
   
    const extPrefix = 'voting';
 
@@ -113,14 +113,13 @@ console.log('theirVote has', outputCore.length, 'entries')
  console.log(discoveryCore.peers.length);
 
  discoveryCore.on('peer-add', (peerInfo) => {
-    console.log('Connected to', peerInfo.publicKey, 'on', peerInfo.topics); 
+    console.log('Connected to', peerInfo.publicKey, 'on', peerInfo.topics);
     console.log('new peer, peer:', peerInfo, 'peer count:', discoveryCore.peers.length)
  });
-
- await autobase.ready()
+ 
 
   const localBee = new AutoBee(autobase)
-
+  //
   await localBee.ready()
 
   const db = new DB(localBee);
