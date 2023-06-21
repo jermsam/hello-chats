@@ -45,7 +45,7 @@ export const sdk = await SDK.create({
 
   // Topics are just identifiers to find other peers under
 // const topic = crypto.createHash('sha256').update('Insert a topic name here').digest()
-const topic = await crypto.subtle.digest('SHA-256', b4a.from('voting 101', 'hex')).then(b4a.from)
+export const topic = await crypto.subtle.digest('SHA-256', b4a.from('voting 101', 'hex')).then(b4a.from)
 
  const discoveryCore = await sdk.get(topic);
 

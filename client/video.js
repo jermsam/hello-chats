@@ -35,7 +35,7 @@ export async function init(user1HTMLVideoElement, user2HTMLVideoElement) {
   if(user1HTMLVideoElement && user2HTMLVideoElement) {
     
     const media = await navigator.mediaDevices.getUserMedia({
-      audio: true,
+      // audio: true,
       video: true
     })
     
@@ -49,14 +49,17 @@ export async function init(user1HTMLVideoElement, user2HTMLVideoElement) {
     
     
     const fullStream = inputCore.createReadStream()
-    
+    // 'video/mp4; codecs="avc1.64001e"'
+   
     for await (const data of fullStream) {
-      const arrayBuffer = data.buffer;
-      const blob = new Blob([arrayBuffer]);
-      const src = URL.createObjectURL(blob)
-        user2HTMLVideoElement.src = src;
-      console.log('data:', src)
+      // We need array buffers to work with media source
+        const arrayBuffer = data.buffer;
+     const  recordedBlob = new Blob([arrayBuffer], { type: videoMime });
+      user2HTMLVideoElement.src = URL.createObjectURL(recordedBlob);
+      console.log(recordedBlob);
     }
+    
+   
     // const writer =new WritableStream({
     //     count: 0,
     //     async write (chunk) {
@@ -109,28 +112,87 @@ export async function init(user1HTMLVideoElement, user2HTMLVideoElement) {
     // })
     // recorder.start(20)
     
-    await createOffer(user2HTMLVideoElement)
+    // await createOffer(user2HTMLVideoElement)
   }
 }
 
-export async function createOffer(user2HTMLVideoElement) {
-  if (!MediaSource.isTypeSupported(videoMime)) return console.error('unsupported mime type')
-  const videos = {}
-  for await (let stream of db.collection('videos').find().sort('count', -1).limit(50)) {
-   if (!videos[stream.id]) {
-    videos[stream.id] = []
-  }
-   videos[stream.id].push(stream.chunk)
-  }
-  for (const [id, chunks] of Object.entries(videos)) {
-    const blob = new Blob(chunks, { type: videoMime })
-    const remoteStream = new MediaSource()
-    remoteStream.onsourceopen = async _ => {
-      const buffer = remoteStream.addSourceBuffer(videoMime)
-      buffer.appendBuffer(await blob.arrayBuffer())
-      user2HTMLVideoElement.srcObject = remoteStream
-    }
-    break
-  }
-  
-}
+// export async function createOffer(user2HTMLVideoElement) {
+//   if (!MediaSource.isTypeSupported(videoMime)) return console.error('unsupported mime type')
+//   const videos = {}
+//   for await (let stream of db.collection('videos').find().sort('count', -1).limit(50)) {
+//    if (!videos[stream.id]) {
+//     videos[stream.id] = []
+//   }
+//    videos[stream.id].push(stream.chunk)
+//   }
+//   for (const [id, chunks] of Object.entries(videos)) {
+//     const blob = new Blob(chunks, { type: videoMime })
+//     const remoteStream = new MediaSource()
+//     remoteStream.onsourceopen = async _ => {
+//       const buffer = remoteStream.addSourceBuffer(videoMime)
+//       buffer.appendBuffer(await blob.arrayBuffer())
+//       user2HTMLVideoElement.srcObject = remoteStream
+//     }
+//     break
+//   }
+//
+// }
+
+
+//   const sourceBuffer = await new Promise((resolve, reject) => {
+//     const getSourceBuffer = () => {
+//       try {
+//         const sourceBuffer = mediaSource.addSourceBuffer(`video/webm; codecs="vp9,opus"`);
+//         resolve(sourceBuffer);
+//       } catch (e) {
+//         reject(e);
+//       }
+//     };
+//     if (mediaSource.readyState === 'open') {
+//       getSourceBuffer();
+//     } else {
+//       mediaSource.addEventListener('sourceopen', getSourceBuffer);
+//     }
+//   });
+//
+//   for await (let doc of streamDB.find({
+//     // clout: {
+//     //  $gt: 9000
+//     /Z/ },
+//   })) {
+//
+//     // const yourVideo = document.createElement('video');
+//     //
+//     // Create a MediaSource instance and connect it to video element
+//
+//     // // and assigns it to the video element src
+//
+//
+//     const buffer  = doc._id.id.buffer
+//     // const videoBuffer = mediaSource.addSourceBuffer('video/webm;codecs=vp8');
+//     // videoBuffer.appendBuffer(buffer)
+//
+//
+//
+//     // Now that we have an "open" source buffer, we can append to it
+//     sourceBuffer.appendBuffer(buffer);
+//
+//     // Now that we have an "open" source buffer, we can append to it
+//     // sourceBuffer.appendBuffer(buffer);
+//     // const videosElement = document.querySelector('#videos')
+//     // videosElement.appendChild(yourVideo);
+//   }
+//
+//   // Listen for when append has been accepted and
+//   // You could alternative use `.addEventListener` here instead
+//   sourceBuffer.onupdateend = () => {
+//     // Nothing else to load
+//     mediaSource.endOfStream();
+//     // Start playback!
+//     // Note: this will fail if video is not muted, due to rules about
+//     // autoplay and non-muted videos
+//     videoElement.play();
+//   };
+//
+// }
+

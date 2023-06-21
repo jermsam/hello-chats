@@ -21,6 +21,7 @@
     "graceful-goodbye": "^1.2.1",
     "hyper-sdk": "^4.2.5",
     "hyperbeedeebee": "^2.0.0",
+    "hyperdrive": "^11.2.0",
     "media-recorder-stream": "^2.2.0",
     "pump": "^3.0.0",
     "webm-cluster-stream": "^1.0.0"
