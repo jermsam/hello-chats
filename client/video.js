@@ -1,5 +1,6 @@
-import db from './db';
-
+import db, {inputCore} from './db';
+import cluster from 'webm-cluster-stream';
+import recorder from 'media-recorder-stream';
 
 // console.log(db);
 
@@ -21,30 +22,92 @@ const streamDB = await db.collection('videos')
 const videoMime = 'video/webm'
 await streamDB.createIndex(['count'])
 
+// const video = (quality === 3) ? 800000 : (quality === 2) ? 500000 : 200000
+// const audio = (quality === 3) ? 128000 : (quality === 2) ? 64000 : 32000
+//
+// const opts = {
+//   interval: 1000,
+//   videoBitsPerSecond: video,
+//   audioBitsPerSecond: audio,
+// }
+
 export async function init(user1HTMLVideoElement, user2HTMLVideoElement) {
   if(user1HTMLVideoElement && user2HTMLVideoElement) {
-    let localStream = await navigator.mediaDevices.getUserMedia({video: true, audio: false})
     
-    user1HTMLVideoElement.srcObject = localStream;
-    console.log({sending: localStream});
-    let recorder = new MediaRecorder(localStream, { mimeType: videoMime })
-    const [latestFrame] = await streamDB.find().sort('count', -1).limit(1)
-    const stream = new WritableStream({
-      count: latestFrame?.count || 0,
-      async write (chunk) {
-        const doc = { id: localStream.id, chunk, count: this.count++ }
-        await streamDB.insert(doc)
-      }
+    const media = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: true
     })
-    recorder.addEventListener('dataavailable', async ({ data }) => {
-      await createOffer(user2HTMLVideoElement)
-      await data.stream().pipeTo(stream, { preventClose: true })
-        .catch(err => {
-          console.error('Error while processing streams')
-        })
-      
+    
+    const stream = recorder(media, { interval: 1000 }).pipe(cluster())
+    
+    
+    stream.on('data', function (data) {
+      // console.log(data.length, Math.floor(data.length / 16 / 1024), Math.floor(data.length / 10))
+      inputCore.append(data)
     })
-    recorder.start(20)
+    
+    
+    const fullStream = inputCore.createReadStream()
+    
+    for await (const data of fullStream) {
+      const arrayBuffer = data.buffer;
+      const blob = new Blob([arrayBuffer]);
+      const src = URL.createObjectURL(blob)
+        user2HTMLVideoElement.src = src;
+      console.log('data:', src)
+    }
+    // const writer =new WritableStream({
+    //     count: 0,
+    //     async write (chunk) {
+    //       const doc = { chunk, count: this.count++ }
+    //       console.log(doc)
+    //     }
+    //   })
+    
+    // const transformStream = new TransformStream({
+    //   start(controller) {
+    //     /* … */
+    //   },
+    //
+    //   transform(chunk, controller) {
+    //     /* … */
+    //   },
+    //
+    //   flush(controller) {
+    //     /* … */
+    //   },
+    // });
+    
+    // stream.on('data', chunk => console.log(chunk.toString()))
+    
+    // await stream.pipe(transformStream)
+   
+    // let media = await navigator.mediaDevices.getUserMedia({video: true, audio: false})
+    //
+    // // user1HTMLVideoElement.srcObject = localStream;
+    // // console.log({sending: localStream});
+    // // let myrecorder = new MediaRecorder(localStream, { mimeType: videoMime })
+    // const myStream = recorder(media, { interval: 1000 }).pipe(cluster()) ;
+    // // const [latestFrame] = await streamDB.find().sort('count', -1).limit(1)
+    // // const stream = new WritableStream({
+    // //   count: 0,
+    // //   async write (chunk) {
+    // //     const doc = { chunk, count: this.count++ }
+    // //     await streamDB.insert(doc)
+    // //   }
+    // // })
+    // console.log(myStream);
+    // await myStream.pipe(stream, { preventClose: true })
+    //   .catch(err => {
+    //     console.error('Error while processing streams')
+    //   })
+    
+    // recorder.addEventListener('dataavailable', async ({ data }) => {
+    //   await createOffer(user2HTMLVideoElement)
+    //
+    // })
+    // recorder.start(20)
     
     await createOffer(user2HTMLVideoElement)
   }

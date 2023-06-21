@@ -13,7 +13,7 @@ const socket = new WebSocket('ws://localhost:3210');
 const dht = new DHT(new Stream(true, socket))
 
 
-const sdk = await SDK.create({
+export const sdk = await SDK.create({
     // Specify the "storage" you want
     // Regular strings will be passed to `random-access-application` to store in your user directory
     // On web this will use `random-access-web` to choose the best storage based on the browser
@@ -51,9 +51,9 @@ const topic = await crypto.subtle.digest('SHA-256', b4a.from('voting 101', 'hex'
 
  const store =  await sdk.namespace('voting 101')
 
- const inputCore = store.get({ name: 'your vote' })
+ export const inputCore = store.get({ name: 'input stream' })
 
- const outputCore = store.get({ name: 'there vote' })
+ const outputCore = store.get({ name: 'output stream' })
 
  goodbye(async () => {
     await Promise.all([inputCore.close(), outputCore.close()])
